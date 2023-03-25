@@ -1,10 +1,10 @@
-import React, { PureComponent } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import PropTypes from 'prop-types';
+import React, { PureComponent } from "react";
+import { View, StyleSheet, Text } from "react-native";
+import PropTypes from "prop-types";
 
-import barcodes from 'jsbarcode/src/barcodes';
+import barcodes from "jsbarcode/src/barcodes";
 
-import {Surface, Shape} from '@react-native-community/art';
+import Svg, { Path } from "react-native-svg";
 
 export default class Barcode extends PureComponent {
   static propTypes = {
@@ -25,26 +25,26 @@ export default class Barcode extends PureComponent {
     /* Set the background of the barcode. */
     background: PropTypes.string,
     /* Handle error for invalid barcode of selected format */
-    onError: PropTypes.func
+    onError: PropTypes.func,
   };
 
   static defaultProps = {
     value: undefined,
-    format: 'CODE128',
+    format: "CODE128",
     text: undefined,
     width: 2,
     height: 100,
-    lineColor: '#000000',
-    textColor: '#000000',
-    background: '#ffffff',
-    onError: undefined
+    lineColor: "#000000",
+    textColor: "#000000",
+    background: "#ffffff",
+    onError: undefined,
   };
 
   constructor(props) {
     super(props);
     this.state = {
       bars: [],
-      barCodeWidth: 0
+      barCodeWidth: 0,
     };
   }
 
@@ -84,7 +84,7 @@ export default class Barcode extends PureComponent {
 
     for (let b = 0; b < binary.length; b++) {
       x = b * options.width;
-      if (binary[b] === '1') {
+      if (binary[b] === "1") {
         barWidth++;
       } else if (barWidth > 0) {
         rects[rects.length] = this.drawRect(
@@ -111,7 +111,7 @@ export default class Barcode extends PureComponent {
   }
 
   drawRect(x, y, width, height) {
-    return `M${x},${y}h${width}v${height}h-${width}z`;
+    return `M${x} ${y} h${width} v${height} h-${width} z`;
   }
 
   getTotalWidthOfEncodings(encodings) {
@@ -125,12 +125,14 @@ export default class Barcode extends PureComponent {
   // encode() handles the Encoder call and builds the binary string to be rendered
   encode(text, Encoder, options) {
     // If text is not a non-empty string, throw error.
-    if (typeof text !== 'string' || text.length === 0) {
+    if (typeof text !== "string" || text.length === 0) {
       if (this.props.onError) {
-        this.props.onError(new Error('Barcode value must be a non-empty string'));
+        this.props.onError(
+          new Error("Barcode value must be a non-empty string")
+        );
         return;
       }
-      throw new Error('Barcode value must be a non-empty string');
+      throw new Error("Barcode value must be a non-empty string");
     }
 
     var encoder;
@@ -139,20 +141,20 @@ export default class Barcode extends PureComponent {
       encoder = new Encoder(text, options);
     } catch (error) {
       // If the encoder could not be instantiated, throw error.
-      if (this.props.onError)  {
-        this.props.onError(new Error('Invalid barcode format.'));
+      if (this.props.onError) {
+        this.props.onError(new Error("Invalid barcode format."));
         return;
       }
-      throw new Error('Invalid barcode format.');
+      throw new Error("Invalid barcode format.");
     }
 
     // If the input is not valid for the encoder, throw error.
     if (!encoder.valid()) {
       if (this.props.onError) {
-        this.props.onError(new Error('Invalid barcode for selected format.'));
+        this.props.onError(new Error("Invalid barcode for selected format."));
         return;
       }
-      throw new Error('Invalid barcode for selected format.');
+      throw new Error("Invalid barcode for selected format.");
     }
 
     // Make a request for the binary data (and other information) that should be rendered
@@ -165,19 +167,41 @@ export default class Barcode extends PureComponent {
     return encoded;
   }
 
+  renderSvg() {
+    return (
+      <Svg height={this.props.height} width={this.state.barCodeWidth}>
+        {this.renderBars()}
+      </Svg>
+    );
+  }
+
+  renderBars() {
+    return this.state.bars.map(this.renderBar);
+  }
+
+  renderBar(bar) {
+    return <Path d={bar} stroke={this.props.lineColor} fill="none" />;
+  }
+
   render() {
     this.update();
     const backgroundStyle = {
-      backgroundColor: this.props.background
+      backgroundColor: this.props.background,
     };
     return (
       <View style={[styles.svgContainer, backgroundStyle]}>
-        <Surface height={this.props.height} width={this.state.barCodeWidth}>
-          <Shape d={this.state.bars} fill={this.props.lineColor} />
-        </Surface>
-        { typeof (this.props.text) !== 'undefined' &&
-          <Text style={{color: this.props.textColor, width: this.state.barCodeWidth, textAlign: 'center'}} >{this.props.text}</Text>
-        }
+        {this.renderSvg()}
+        {typeof this.props.text !== "undefined" && (
+          <Text
+            style={{
+              color: this.props.textColor,
+              width: this.state.barCodeWidth,
+              textAlign: "center",
+            }}
+          >
+            {this.props.text}
+          </Text>
+        )}
       </View>
     );
   }
@@ -185,7 +209,7 @@ export default class Barcode extends PureComponent {
 
 const styles = StyleSheet.create({
   svgContainer: {
-    alignItems: 'center',
-    padding: 10
-  }
+    alignItems: "center",
+    padding: 10,
+  },
 });
