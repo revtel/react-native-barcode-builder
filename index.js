@@ -176,11 +176,13 @@ export default class Barcode extends PureComponent {
   }
 
   renderBars() {
-    return this.state.bars.map(this.renderBar);
+    return this.state.bars.map(this.renderBar.bind(this));
   }
 
   renderBar(bar) {
-    return <Path d={bar} stroke={this.props.lineColor} fill="none" />;
+    return (
+      <Path d={bar} stroke={this.props.lineColor} fill={this.props.lineColor} />
+    );
   }
 
   render() {
